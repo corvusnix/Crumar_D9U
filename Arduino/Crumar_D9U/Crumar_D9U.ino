@@ -50,7 +50,7 @@ void set_mode()
 {
     digitalWrite(LED_RED, mode ? LOW : HIGH);
     digitalWrite(LED_GREEN, mode ? HIGH : LOW);
-    EEPROM.write(0x01, mode);
+    EEPROM.update(0x01, mode);
 }
 
 // Called to generate the MIDI CC message
