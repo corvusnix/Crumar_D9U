@@ -44,7 +44,7 @@ bool mode;
 // ADC reference map
 int ADCmap[DRAWBAR_COUNT] = { A0, A1, A2, A3, A6, A7, A8, A9, A10 };
 
-// Called then the pushbutton is depressed
+// set LEDs to show current mode
 void set_leds()
 {
   digitalWrite(LED_RED, !mode);
