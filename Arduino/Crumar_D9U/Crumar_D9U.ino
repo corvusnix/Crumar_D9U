@@ -4,7 +4,7 @@
 // Runs on Atmel ATmega32U4 Arduino Leonardo (with MIDI USB Library)
 // Reads 9 analog inputs from internal ADCs
 // Sends MIDI CC numbers 12-20 or 21-29 according to selected mode
-// Last update: July 2018
+// Last update: February 2020
 // 
 
 ////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ int CCMap[2][9] =
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 // Init global variables
-int mode = 1; // Should be either 0 or 1
+int mode; 
 int prev_val[9] = { -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 int debounce_timer = DEBOUNCE_TIME;
 
@@ -48,20 +48,20 @@ int ADCcnt = 0;
 // Called then the pushbutton is depressed
 void set_mode()
 {
-    digitalWrite(LED_RED, mode ? LOW : HIGH);
-    digitalWrite(LED_GREEN, mode ? HIGH : LOW);
+    digitalWrite(LED_RED, !mode);
+    digitalWrite(LED_GREEN, mode);
     EEPROM.update(0x01, mode);
 }
 
 // Called to generate the MIDI CC message
-void SendMidiCC(int channel, int num, int value)
+void SendMidiCC(int num, int value)
 {
-  midiEventPacket_t CC = {0x0B, 0xB0 | channel, num, value};
+  midiEventPacket_t CC = {0x0B, 0xB0 | mode, num, value};
   MidiUSB.sendMIDI(CC);
   MidiUSB.flush();
 
   // Midi lib wants channels 1~16
-  MIDI.sendControlChange(num, value, channel+1);
+  MIDI.sendControlChange(num, value, mode+1);
 }
 
 // Called to check whether a drawbar has been moved
@@ -80,7 +80,7 @@ void DoDrawbar(int d, int value)
   int val7bit = value >> 3;
   
   // Send Midi 
-  SendMidiCC(mode > 0 ? 1 : 0, CCMap[mode][d], val7bit);
+  SendMidiCC(CCMap[mode][d], val7bit);
 }
 
 // The setup routine runs once when you press reset:
@@ -96,7 +96,7 @@ void setup()
   
   // Recall mode from memory and set
   // Make sure mode is either 0 or 1
-  mode = EEPROM.read(0x01) > 0 ? 1 : 0;
+  mode = EEPROM.read(0x01) ? 1 : 0;
   set_mode();
 }
 
@@ -111,13 +111,12 @@ void loop()
   if (digitalRead(BUTTON) == LOW)
   {
     if (debounce_timer > 0) --debounce_timer;
+    if (debounce_timer == 2) 
+    {
+      mode = !mode; // Reverse
+      set_mode(); // and Set!
+    }
   } else {
     debounce_timer = DEBOUNCE_TIME;
-  }
-  
-  if (debounce_timer == 2) 
-  {
-    mode = !mode; // Reverse
-    set_mode(); // and Set!
   }
 }
