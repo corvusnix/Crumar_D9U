@@ -95,8 +95,7 @@ void setup()
   pinMode(LED_GREEN, OUTPUT);    // Led 2
   
   // Recall mode from memory and set
-  // Make sure mode is either 0 or 1
-  mode = EEPROM.read(0x01) ? 1 : 0;
+  mode = EEPROM.read(0x01);
   set_mode();
 }
 
